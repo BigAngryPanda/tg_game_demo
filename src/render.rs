@@ -1,7 +1,35 @@
 use web_sys;
+
 use wasm_bindgen::prelude::*;
+
+use crate::shape::*;
+
+#[allow(unused_imports)]
 use crate::log;
-use crate::Shape;
+
+#[derive(Debug, Clone, Copy)]
+pub struct TransformInfo(pub f32, pub f32);
+
+impl TransformInfo {
+    // column order
+    pub fn scale_matrix(&self) -> [f32; 16] {
+        [
+            self.0, 0.0, 0.0, 0.0,
+            0.0, self.1, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0
+        ]
+    }
+
+    pub fn translation_matrix(&self) -> [f32; 16] {
+        [
+            1.0, 0.0, 0.0, 0.0,
+            0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            self.0, self.1, 1.0, 1.0
+        ]
+    }
+}
 
 // How many f32 per vertex
 const VERTEX_SIZE: usize = 2;
@@ -131,6 +159,9 @@ impl IndicesRender {
     }
 }
 
+// Troubles with sync
+// https://github.com/gfxfundamentals/webgl-fundamentals/discussions/363
+#[derive(Debug)]
 pub struct FeedbackRender {
     context: web_sys::WebGl2RenderingContext,
     program: web_sys::WebGlProgram,
@@ -257,16 +288,7 @@ impl FeedbackRender {
     }
 
     pub fn read_vertices(&self, shape_idx: usize) -> &[f32] {
-        //let buffer: &mut [u8] = unsafe {
-        //    std::slice::from_raw_parts_mut(self.vertices.as_ptr() as *mut u8, std::mem::size_of::<f32>()*self.vertices.len())
-        //};
-
-        //self.context.get_buffer_sub_data_with_i32_and_u8_array(web_sys::WebGl2RenderingContext::TRANSFORM_FEEDBACK_BUFFER, 0, buffer);
-
         let desc: &ShapeDescriptor = &self.descriptors[shape_idx];
-
-        log::write(&format!("DEBUG!!! {} {}", desc.offset_vertex(), desc.size_vertex()));
-        log::write(&format!("DEBUG!!! {:?}", &self.vertices[desc.vertex_range()]));
 
         &self.vertices[desc.vertex_range()]
     }

@@ -20,6 +20,11 @@ web-sys = { version = "0.3", features = [
     "console",
     "WebGlUniformLocation",
     "WebGlTransformFeedback",
-    "WebGlSync"] }
+    "WebGlSync",
+    "Event",
+    "WorkerGlobalScope",
+    "MouseEvent",
+    "CanvasRenderingContext2d",
+    "HtmlParagraphElement"] }
 
 console_error_panic_hook = { version = "0.1.1" }

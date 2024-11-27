@@ -1,5 +1,8 @@
 use crate::point::Point;
 
+#[allow(unused_imports)]
+use crate::log;
+
 #[derive(Debug, Clone, Default)]
 pub struct Shape {
     pub vertices: Vec<Point>,
@@ -21,23 +24,10 @@ impl Shape {
         }
     }
 
-    pub fn from_vertices(vertices: &[f32], indices: &[u32]) -> Shape {
-        if indices.is_empty() {
-            return Self::default();
-        }
-
-        let max: u32 = *indices.into_iter().max().unwrap();
-
-        let mut points: Vec<Point> = Vec::with_capacity(max as usize);
-
-        for &i in indices {
+    pub fn update_vertices(&mut self, vertices: &[f32]) {
+        for &i in &self.indices {
             let i = i as usize;
-            points[i] = Point::new(vertices[2*i], vertices[2*i + 1]);
-        }
-
-        Shape {
-            vertices: points,
-            indices: Vec::from(indices)
+            self.vertices[i] = Point::new(vertices[2*i], vertices[2*i + 1]);
         }
     }
 
@@ -49,7 +39,7 @@ impl Shape {
         let mut hit = true;
 
         for i in 0..self.vertices.len() {
-            let j = i + 1 % self.vertices.len();
+            let j = (i + 1) % self.vertices.len();
 
             let p_i = self.vertices[i];
             let p_j = self.vertices[j];

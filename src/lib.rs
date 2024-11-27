@@ -1,73 +1,61 @@
 mod point;
 mod shape;
-mod scene;
 mod shader;
 mod log;
 mod render;
+mod game;
+mod rand;
+mod ui;
+mod game_state;
 
 use wasm_bindgen::prelude::*;
 
-use shape::Shape;
-use render::*;
-use scene::*;
+use point::*;
+use game::*;
+
+fn set_input_callback(game: std::rc::Rc<std::cell::RefCell<Game>>) {
+    let window = game.as_ref().borrow().window();
+
+    let callback = Closure::wrap(Box::new(move |event: web_sys::Event| {
+        let wnd = game.as_ref().borrow().window();
+
+        let width: f32 = wnd.inner_width().expect("Failed to get window width").as_f64().unwrap() as f32;
+        let height: f32 = wnd.inner_height().expect("Failed to get window height").as_f64().unwrap() as f32;
+
+        let e = event.dyn_into::<web_sys::MouseEvent>().expect("Failed to get mouse event");
+
+        game.as_ref().borrow_mut().store_input(Point::from_screen_coords(e.x() as f32 / width, e.y() as f32 / height));
+    }) as Box<dyn FnMut(_)>);
+
+    window.add_event_listener_with_callback("click", callback.as_ref().unchecked_ref()).expect("Failed to set event listener");
+
+    callback.forget();
+}
+
+fn run_loop(game: std::rc::Rc<std::cell::RefCell<Game>>) {
+    let draw_closure = std::rc::Rc::new(std::cell::RefCell::new(None));
+    let draw_closure_clone = draw_closure.clone();
+
+    let game_clone = game.clone();
+
+    *draw_closure_clone.borrow_mut() = Some(Closure::new(move || {
+        game.as_ref().borrow_mut().run();
+
+        // Schedule ourself for another requestAnimationFrame callback.
+        game.as_ref().borrow().request_next_frame(draw_closure.borrow().as_ref().unwrap())
+            .expect("Failed to request new frame");
+    }));
+
+    game_clone.as_ref().borrow().request_next_frame(draw_closure_clone.borrow().as_ref().unwrap())
+        .expect("Failed to request new frame");
+}
 
 #[wasm_bindgen]
-pub fn start_webgl() -> Result<(), JsValue> {
-    console_error_panic_hook::set_once();
+pub fn start() -> Result<(), JsValue> {
+    let game: std::rc::Rc<std::cell::RefCell<Game>> = std::rc::Rc::new(std::cell::RefCell::new(Game::new()));
 
-    let window = web_sys::window().unwrap();
-    let document = window.document().unwrap();
-    let canvas = document.get_element_by_id("canvas").unwrap().dyn_into::<web_sys::HtmlCanvasElement>()?;
-
-    let mut feedback_render = FeedbackRender::new(&canvas);
-
-    feedback_render.link_shader(shader::FEEDBACK_VERTEX_SHADER, shader::VERTEX_SHADER_KIND);
-    feedback_render.link_shader(shader::FRAGMENT_SHADER, shader::FRAGMENT_SHADER_KIND);
-
-    feedback_render.link_program();
-
-    feedback_render.add(&Shape::triangle());
-    feedback_render.add(&Shape::square());
-
-    feedback_render.write_vertices("vertexPosition");
-
-    feedback_render.write_uniform(&TransformInfo {
-        scale_x: 0.25,
-        scale_y: 0.25,
-        translation_x: -0.5,
-        translation_y: 0.0,
-    }.scale_matrix(), "scale");
-
-    feedback_render.write_uniform(&TransformInfo {
-        scale_x: 0.25,
-        scale_y: 0.25,
-        translation_x: -0.5,
-        translation_y: 0.0,
-    }.translation_matrix(), "translation");
-
-    feedback_render.clear();
-
-    feedback_render.draw(0);
-
-    feedback_render.read_vertices(0);
-
-    feedback_render.write_uniform(&TransformInfo {
-        scale_x: 0.25,
-        scale_y: 0.25,
-        translation_x: 0.5,
-        translation_y: 0.0,
-    }.translation_matrix(), "translation");
-
-    feedback_render.draw(1);
-
-    feedback_render.read_vertices(1);
-
-    //scene.write_feedback_vertices(&feedback_render);
-
-    //scene.draw(&render, &[0]);
-    //scene.draw_feedback(&feedback_render, &[1]);
-
-    //feedback_render.debug();
+    set_input_callback(game.clone());
+    run_loop(game.clone());
 
     Ok(())
 }
