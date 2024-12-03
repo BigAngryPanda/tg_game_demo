@@ -13,27 +13,21 @@
             position:absolute;
             width:100%;
             height:100%;
-            z-index: 1;
-        }
-
-        #ui_canvas {
-            position:absolute;
-            width:100%;
-            height:100%;
             z-index: 0;
         }
 
-        #score_text {
+        #score_area {
             position:absolute;
             width:100%;
             height:100%;
-            z-index: 2;
+            z-index: 1;
+            color: aliceblue;
         }
     </style>
 </head>
 <body>
     <p id="score_area">Score = 0</p>
-    <canvas id="canvas" width="100%" height="100%"></canvas>
+    <canvas id="canvas"></canvas>
     <script type="module">
         import init, { start } from './pkg/test_wasm_webgl.js';
 

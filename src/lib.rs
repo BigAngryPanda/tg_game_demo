@@ -7,6 +7,7 @@ mod game;
 mod rand;
 mod ui;
 mod game_state;
+mod texture;
 
 use wasm_bindgen::prelude::*;
 
@@ -52,6 +53,8 @@ fn run_loop(game: std::rc::Rc<std::cell::RefCell<Game>>) {
 
 #[wasm_bindgen]
 pub fn start() -> Result<(), JsValue> {
+    console_error_panic_hook::set_once();
+
     let game: std::rc::Rc<std::cell::RefCell<Game>> = std::rc::Rc::new(std::cell::RefCell::new(Game::new()));
 
     set_input_callback(game.clone());

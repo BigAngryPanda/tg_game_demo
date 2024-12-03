@@ -1,42 +1,68 @@
-pub const VERTEX_SHADER: &str = r#"#version 300 es
+pub mod background {
+    pub const VERTEX_SHADER: &str = r#"#version 300 es
 
-in vec2 vertexPosition;
+    in vec2 vertexPosition;
 
-uniform mat4 scale;
-uniform mat4 translation;
+    uniform mat4 scale;
+    uniform mat4 translation;
 
-void main() {
-    gl_Position = translation*scale*vec4(vertexPosition, 0, 1);
-}"#;
+    out vec2 uv;
 
-pub const FEEDBACK_VERTEX_SHADER: &str = r#"#version 300 es
+    void main() {
+        gl_Position = translation*scale*vec4(vertexPosition, 1.0, 1.0);
+        uv = vec2(1, 1) - (vertexPosition.xy + vec2(1, 1)) * 0.5;
+    }"#;
 
-in vec2 vertexPosition;
+    pub const FRAGMENT_SHADER: &str = r#"#version 300 es
 
-uniform mat4 scale;
-uniform mat4 translation;
+    precision mediump float;
 
-out vec4 vertexPos;
-out vec2 vertOut;
+    in vec2 uv;
 
-void main() {
-    gl_Position = translation*scale*vec4(vertexPosition, 0, 1);
-    vertexPos = gl_Position;
-    vertOut = gl_Position.xy;
-}"#;
+    uniform sampler2D tex;
+
+    out vec4 fragColor;
+
+    void main() {
+        fragColor = texture(tex, uv);
+    }"#;
+}
+
+pub mod feedback {
+    pub const VERTEX_SHADER: &str = r#"#version 300 es
+
+    in vec2 vertexPosition;
+
+    uniform mat4 scale;
+    uniform mat4 translation;
+
+    out vec4 vertexPos;
+    out vec2 vertOut;
+    out vec2 uv;
+
+    void main() {
+        gl_Position = translation*scale*vec4(vertexPosition, 0.0, 1.0);
+        vertexPos = gl_Position;
+        vertOut = gl_Position.xy;
+        uv = (vertexPosition.xy + vec2(1, 1)) * 0.5;
+    }"#;
+
+    pub const FRAGMENT_SHADER: &str = r#"#version 300 es
+
+    precision mediump float;
+
+    in vec4 vertexPos;
+    in vec2 uv;
+
+    uniform sampler2D tex;
+
+    out vec4 fragColor;
+
+    void main() {
+        fragColor = texture(tex, uv);
+    }"#;
+}
 
 pub const VERTEX_SHADER_KIND: u32 = web_sys::WebGl2RenderingContext::VERTEX_SHADER;
-
-pub const FRAGMENT_SHADER: &str = r#"#version 300 es
-
-precision mediump float;
-
-in vec4 vertexPos;
-
-out vec4 fragColor;
-
-void main() {
-    fragColor = vertexPos;
-}"#;
 
 pub const FRAGMENT_SHADER_KIND: u32 = web_sys::WebGl2RenderingContext::FRAGMENT_SHADER;
