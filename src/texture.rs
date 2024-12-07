@@ -62,9 +62,9 @@ pub fn from_rgba_data(
 
     gl.generate_mipmap(web_sys::WebGl2RenderingContext::TEXTURE_2D);
 
-    gl.tex_parameteri(web_sys::WebGl2RenderingContext::TEXTURE_2D, web_sys::WebGl2RenderingContext::TEXTURE_WRAP_T, web_sys::WebGl2RenderingContext::NEAREST as i32);
-    gl.tex_parameteri(web_sys::WebGl2RenderingContext::TEXTURE_2D, web_sys::WebGl2RenderingContext::TEXTURE_WRAP_S, web_sys::WebGl2RenderingContext::NEAREST as i32);
-    gl.tex_parameteri(web_sys::WebGl2RenderingContext::TEXTURE_2D, web_sys::WebGl2RenderingContext::TEXTURE_WRAP_R, web_sys::WebGl2RenderingContext::NEAREST as i32);
+    gl.tex_parameteri(web_sys::WebGl2RenderingContext::TEXTURE_2D, web_sys::WebGl2RenderingContext::TEXTURE_WRAP_T, web_sys::WebGl2RenderingContext::REPEAT as i32);
+    gl.tex_parameteri(web_sys::WebGl2RenderingContext::TEXTURE_2D, web_sys::WebGl2RenderingContext::TEXTURE_WRAP_S, web_sys::WebGl2RenderingContext::REPEAT as i32);
+    gl.tex_parameteri(web_sys::WebGl2RenderingContext::TEXTURE_2D, web_sys::WebGl2RenderingContext::TEXTURE_WRAP_R, web_sys::WebGl2RenderingContext::REPEAT as i32);
     gl.tex_parameteri(web_sys::WebGl2RenderingContext::TEXTURE_2D, web_sys::WebGl2RenderingContext::TEXTURE_MIN_FILTER, web_sys::WebGl2RenderingContext::LINEAR as i32);
     gl.tex_parameteri(web_sys::WebGl2RenderingContext::TEXTURE_2D, web_sys::WebGl2RenderingContext::TEXTURE_MAG_FILTER, web_sys::WebGl2RenderingContext::LINEAR as i32);
 
