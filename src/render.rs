@@ -311,6 +311,8 @@ impl FeedbackRender {
 
         self.context.end_transform_feedback();
 
+        self.context.finish();
+
         let buffer: &mut [u8] = unsafe {
             std::slice::from_raw_parts_mut(self.vertices.as_ptr() as *mut u8, std::mem::size_of::<f32>()*self.vertices.len())
         };
