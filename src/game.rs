@@ -10,6 +10,7 @@ use crate::rand::*;
 use crate::ui::*;
 use crate::game_state::*;
 use crate::texture::*;
+use crate::scene::*;
 
 fn get_transforms(u: f32, d: f32, l: f32, r: f32, count_x: u32, count_y: u32) -> Vec<TransformInfo> {
     let dx = (r - l) / (2*count_x) as f32;
@@ -29,17 +30,21 @@ fn get_transforms(u: f32, d: f32, l: f32, r: f32, count_x: u32, count_y: u32) ->
 #[derive(Debug)]
 pub struct Game {
     window: web_sys::Window,
-    feedback_render: FeedbackRender,
-    indices_render: IndicesRender,
-    dynamic_shapes: Vec<Shape>,
-    static_shapes: Vec<Shape>,
-    transforms: Vec<TransformInfo>,
-    transform_indices: Vec<usize>,
+    //feedback_render: FeedbackRender,
+    //indices_render: IndicesRender,
+    //dynamic_shapes: Vec<Shape>,
+    //static_shapes: Vec<Shape>,
+    //transforms: Vec<TransformInfo>,
+    //transform_indices: Vec<usize>,
     input_queue: Vec<Point>,
     random_generator: RandomGenerator,
     ui: Ui,
     state: GameState,
-    textures: Vec<Texture>
+    performance: web_sys::Performance,
+    timestamp: f64,
+    //textures: Vec<Texture>,
+
+    scene: Scene
 }
 
 impl Game {
@@ -55,91 +60,108 @@ impl Game {
 
         let ui = Ui::new(&document);
 
-        let gl: web_sys::WebGl2RenderingContext = canvas
-            .get_context("webgl2")
-            .expect("Failed to get context")
-            .expect("Failed to get js object")
-            .dyn_into::<web_sys::WebGl2RenderingContext>()
-            .expect("Failed to get WebGl2RenderingContext");
+        //let gl: web_sys::WebGl2RenderingContext = canvas
+        //    .get_context("webgl2")
+        //    .expect("Failed to get context")
+        //    .expect("Failed to get js object")
+        //    .dyn_into::<web_sys::WebGl2RenderingContext>()
+        //    .expect("Failed to get WebGl2RenderingContext");
 
-        gl.enable(web_sys::WebGl2RenderingContext::DEPTH_TEST);
-        gl.depth_func(web_sys::WebGl2RenderingContext::LEQUAL);
+        //gl.enable(web_sys::WebGl2RenderingContext::DEPTH_TEST);
+        //gl.depth_func(web_sys::WebGl2RenderingContext::LEQUAL);
 
-        gl.clear(web_sys::WebGl2RenderingContext::COLOR_BUFFER_BIT | web_sys::WebGl2RenderingContext::DEPTH_BUFFER_BIT);
-        gl.clear_color(1.0, 1.0, 1.0, 1.0);
+        //gl.clear(web_sys::WebGl2RenderingContext::COLOR_BUFFER_BIT | web_sys::WebGl2RenderingContext::DEPTH_BUFFER_BIT);
+        //gl.clear_color(1.0, 1.0, 1.0, 1.0);
 
-        let default_raw_texture = [
-            255, 0, 0, 255,
-            0, 255, 0, 255,
-            0, 0, 255, 255,
-            255, 0, 255, 255
-        ];
+        let mut scene = Scene::new(canvas);
 
-        let default_texture = from_rgba_data(&gl, &default_raw_texture, 2, 2, web_sys::WebGl2RenderingContext::RGBA);
+        scene.add_dynamic_shape(&Shape::triangle(1));
+        scene.add_dynamic_shape(&Shape::square(1));
+        scene.add_dynamic_shape(&Shape::square(1));
 
-        let fig_raw_texture = include_bytes!("textures/brick.png");
-        let fig_texture = from_png_data(&gl, fig_raw_texture, web_sys::WebGl2RenderingContext::RGBA);
+        scene.add_static_shape(&Shape::square(2));
 
-        let back_raw_texture = include_bytes!("textures/background.png");
-        let back_texture = from_png_data(&gl, back_raw_texture, web_sys::WebGl2RenderingContext::RGBA);
+        scene.update_renders();
+
+        //let default_raw_texture = [
+        //    255, 0, 0, 255,
+        //    0, 255, 0, 255,
+        //    0, 0, 255, 255,
+        //    255, 0, 255, 255
+        //];
+
+        //let default_texture = from_rgba_data(&gl, &default_raw_texture, 2, 2, web_sys::WebGl2RenderingContext::RGBA);
+
+        //let fig_raw_texture = include_bytes!("textures/brick.png");
+        //let fig_texture = from_png_data(&gl, fig_raw_texture, web_sys::WebGl2RenderingContext::RGBA);
+
+        //let back_raw_texture = include_bytes!("textures/background.png");
+        //let back_texture = from_png_data(&gl, back_raw_texture, web_sys::WebGl2RenderingContext::RGBA);
 
         // feedback render
-        let mut feedback_render = FeedbackRender::new(&gl);
+        //let mut feedback_render = FeedbackRender::new(&gl);
 
-        feedback_render.link_shader(feedback::VERTEX_SHADER, VERTEX_SHADER_KIND);
-        feedback_render.link_shader(feedback::FRAGMENT_SHADER, FRAGMENT_SHADER_KIND);
+        //feedback_render.link_shader(feedback::VERTEX_SHADER, VERTEX_SHADER_KIND);
+        //feedback_render.link_shader(feedback::FRAGMENT_SHADER, FRAGMENT_SHADER_KIND);
 
-        feedback_render.link_program();
+        //feedback_render.link_program();
 
-        feedback_render.setup_render();
+        //feedback_render.setup_render();
 
-        feedback_render.enable_texture("tex");
+        //feedback_render.enable_texture("tex");
 
-        feedback_render.add(&Shape::triangle(1));
-        feedback_render.add(&Shape::square(1));
-        feedback_render.add(&Shape::square(1));
+        //feedback_render.add(&Shape::triangle(1));
+        //feedback_render.add(&Shape::square(1));
+        //feedback_render.add(&Shape::square(1));
 
-        feedback_render.write_vertices("vertexPosition");
-        feedback_render.write_uniform(&TransformInfo(0.1, 0.1).scale_matrix(), "scale");
+        //feedback_render.write_vertices("vertexPosition");
+        //feedback_render.write_uniform(&TransformInfo(0.1, 0.1).scale_matrix(), "scale");
 
-        let dynamic_shapes = vec![Shape::triangle(1), Shape::square(1), Shape::square(1)];
-        let transforms = get_transforms(0.8, -1.0, -1.0, 1.0, 3, 3);
+        //let dynamic_shapes = vec![Shape::triangle(1), Shape::square(1), Shape::square(1)];
+        //let transforms = get_transforms(0.8, -1.0, -1.0, 1.0, 3, 3);
 
-        let transform_indices: Vec<usize> = std::ops::Range{start: 0, end: transforms.len()}.into_iter().collect();
+        //let transform_indices: Vec<usize> = std::ops::Range{start: 0, end: transforms.len()}.into_iter().collect();
 
-        let mut static_shapes: Vec<Shape> = Vec::new();
-        static_shapes.push(Shape::square(2));
+        //let mut static_shapes: Vec<Shape> = Vec::new();
+        //static_shapes.push(Shape::square(2));
 
         // indices render
-        let mut indices_render = IndicesRender::new(&gl);
+        //let mut indices_render = IndicesRender::new(&gl);
 
-        indices_render.link_shader(background::VERTEX_SHADER, VERTEX_SHADER_KIND);
-        indices_render.link_shader(background::FRAGMENT_SHADER, FRAGMENT_SHADER_KIND);
+        //indices_render.link_shader(background::VERTEX_SHADER, VERTEX_SHADER_KIND);
+        //indices_render.link_shader(background::FRAGMENT_SHADER, FRAGMENT_SHADER_KIND);
 
-        indices_render.link_program();
+        //indices_render.link_program();
 
-        indices_render.setup_render();
+        //indices_render.setup_render();
 
-        indices_render.add(&static_shapes[0]);
+        //indices_render.add(&static_shapes[0]);
 
-        indices_render.write_vertices("vertexPosition");
-        indices_render.enable_texture("tex");
-        indices_render.write_uniform(&TransformInfo::id(), "translation");
-        indices_render.write_uniform(&TransformInfo::id(), "scale");
+        //indices_render.write_vertices("vertexPosition");
+        //indices_render.enable_texture("tex");
+        //indices_render.write_uniform(&TransformInfo::id(), "translation");
+        //indices_render.write_uniform(&TransformInfo::id(), "scale");
+
+        let performance: web_sys::Performance = window
+            .performance()
+            .expect("performance should be available");
 
         Game {
             window,
-            feedback_render,
-            indices_render,
-            dynamic_shapes,
-            static_shapes,
-            transforms,
-            transform_indices,
+            //feedback_render,
+            //indices_render,
+            //dynamic_shapes,
+            //static_shapes,
+            //transforms,
+            //transform_indices,
             input_queue: Vec::new(),
             random_generator: RandomGenerator::new(),
             ui,
             state: GameState::new(),
-            textures: vec![default_texture, fig_texture, back_texture]
+            performance,
+            timestamp: 0.0,
+            //textures: vec![default_texture, fig_texture, back_texture],
+            scene
         }
     }
 
@@ -148,8 +170,10 @@ impl Game {
     }
 
     pub fn run(&mut self) {
+        let dt = self.update_time();
         self.handle_input();
-        self.render();
+        //self.render();
+        self.scene.render(dt);
     }
 
     pub fn window(&self) -> web_sys::Window {
@@ -162,7 +186,7 @@ impl Game {
 
     fn handle_input(&mut self) {
         if let Some(input) = self.input_queue.pop() {
-            if self.dynamic_shapes[0].contains(input) {
+            if self.scene.is_dynamic_hit(0, input) {
                 self.update_state();
             }
         }
@@ -170,6 +194,7 @@ impl Game {
 
     fn render(&mut self) {
         // render static shapes
+        /*
         self.indices_render.setup_render();
 
         for i in 0..self.static_shapes.len() {
@@ -191,21 +216,31 @@ impl Game {
 
             self.dynamic_shapes[i].update_vertices(self.feedback_render.read_vertices(i));
         }
+        */
     }
 
     fn update_state(&mut self) {
-        self.randomize_transforms(self.dynamic_shapes.len());
+        //self.randomize_transforms(self.dynamic_shapes.len());
+        self.scene.permutate_transforms();
 
         self.state.add_score();
 
         self.ui.set_score(&self.state.score());
     }
 
+    fn update_time(&mut self) -> f64 {
+        let dt = (self.performance.now() - self.timestamp) / 1000.0;
+
+        self.timestamp = self.performance.now();
+
+        dt
+    }
+
     fn randomize_transforms(&mut self, count: usize) {
         for i in 0..count {
-            let j = self.random_generator.rand_in_range(i as u64, self.transform_indices.len() as u64) as usize;
+            //let j = self.random_generator.rand_in_range(i as u64, self.transform_indices.len() as u64) as usize;
 
-            self.transform_indices.swap(i, j);
+            //self.transform_indices.swap(i, j);
         }
     }
 }

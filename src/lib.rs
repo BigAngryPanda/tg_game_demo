@@ -8,13 +8,17 @@ mod rand;
 mod ui;
 mod game_state;
 mod texture;
+mod scene;
 
 use wasm_bindgen::prelude::*;
 
 use point::*;
 use game::*;
 
-fn set_input_callback(game: std::rc::Rc<std::cell::RefCell<Game>>) {
+use std::rc::Rc;
+use std::cell::RefCell;
+
+fn set_input_callback(game: Rc<RefCell<Game>>) {
     let window = game.as_ref().borrow().window();
 
     let callback = Closure::wrap(Box::new(move |event: web_sys::Event| {
@@ -33,8 +37,8 @@ fn set_input_callback(game: std::rc::Rc<std::cell::RefCell<Game>>) {
     callback.forget();
 }
 
-fn run_loop(game: std::rc::Rc<std::cell::RefCell<Game>>) {
-    let draw_closure = std::rc::Rc::new(std::cell::RefCell::new(None));
+fn run_loop(game: Rc<RefCell<Game>>) {
+    let draw_closure = Rc::new(RefCell::new(None));
     let draw_closure_clone = draw_closure.clone();
 
     let game_clone = game.clone();
@@ -55,7 +59,7 @@ fn run_loop(game: std::rc::Rc<std::cell::RefCell<Game>>) {
 pub fn start() -> Result<(), JsValue> {
     console_error_panic_hook::set_once();
 
-    let game: std::rc::Rc<std::cell::RefCell<Game>> = std::rc::Rc::new(std::cell::RefCell::new(Game::new()));
+    let game: Rc<RefCell<Game>> = Rc::new(RefCell::new(Game::new()));
 
     set_input_callback(game.clone());
     run_loop(game.clone());
