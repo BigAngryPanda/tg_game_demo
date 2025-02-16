@@ -24,10 +24,9 @@ fn get_transforms(u: f32, d: f32, l: f32, r: f32, count_x: u32, count_y: u32) ->
     result
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum State {
     Initial,
-    Animation,
     Done,
 }
 
@@ -69,11 +68,14 @@ impl Scene {
 
         let default_texture = from_rgba_data(&gl, &default_raw_texture, 2, 2, web_sys::WebGl2RenderingContext::RGBA);
 
-        let fig_raw_texture = include_bytes!("textures/brick.png");
+        let fig_raw_texture = include_bytes!("textures/princess.png");
         let fig_texture = from_png_data(&gl, fig_raw_texture, web_sys::WebGl2RenderingContext::RGBA);
 
-        let back_raw_texture = include_bytes!("textures/background.png");
+        let back_raw_texture = include_bytes!("textures/brick.png");
         let back_texture = from_png_data(&gl, back_raw_texture, web_sys::WebGl2RenderingContext::RGBA);
+
+        let other_fig_raw_texture = include_bytes!("textures/horn_girl.png");
+        let other_fig_texture = from_png_data(&gl, other_fig_raw_texture, web_sys::WebGl2RenderingContext::RGBA);
 
         // feedback render
         let feedback_render = FeedbackRender::new(&gl);
@@ -87,9 +89,9 @@ impl Scene {
 
         feedback_render.enable_texture("tex");
 
-        feedback_render.write_uniform(&TransformInfo(0.1, 0.1).scale_matrix(), "scale");
+        feedback_render.write_uniform(&TransformInfo(0.1, 0.25).scale_matrix(), "scale");
 
-        let transforms = get_transforms(0.8, -1.0, -1.0, 1.0, 3, 3);
+        let transforms = get_transforms(0.8, -1.0, -1.0, 1.0, 1, 3);
 
         let transform_indices: Vec<usize> = std::ops::Range{start: 0, end: transforms.len()}.into_iter().collect();
 
@@ -117,7 +119,7 @@ impl Scene {
             random_generator: RandomGenerator::new(),
             state: State::Initial,
             time: 0.0,
-            textures: vec![default_texture, fig_texture, back_texture]
+            textures: vec![default_texture, fig_texture, back_texture, other_fig_texture]
         }
     }
 
@@ -141,6 +143,7 @@ impl Scene {
 
         // render dynamic shapes
         self.feedback_render.setup_render();
+        self.feedback_render.write_float(self.time as f32, "t");
 
         for i in 0..self.dynamic_shapes.len() {
             let transform_idx = self.transform_indices[i];
@@ -152,6 +155,14 @@ impl Scene {
 
             self.dynamic_shapes[i].update_vertices(self.feedback_render.read_vertices(i));
         }
+
+        self.time += dt;
+
+        if self.time >= 1.0 {
+            self.state = State::Done;
+        }
+
+        self.time = self.time.clamp(0.0, 1.0);
     }
 
     pub fn update_renders(&mut self) {

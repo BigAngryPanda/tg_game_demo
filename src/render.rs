@@ -291,6 +291,13 @@ impl FeedbackRender {
         self.context.uniform1i(Some(&location), 0);
     }
 
+    pub fn write_float(&self, var: f32, uniform: &str) {
+        let location =
+            self.context.get_uniform_location(&self.program, uniform);
+
+        self.context.uniform1f(location.as_ref(), var);
+    }
+
     pub fn write_uniform(&self, data: &[f32], uniform: &str) {
         let location: web_sys::WebGlUniformLocation =
             self.context.get_uniform_location(&self.program, uniform).expect("Failed to get uniform location");

@@ -35,16 +35,20 @@ pub mod feedback {
 
     uniform mat4 scale;
     uniform mat4 translation;
+    uniform float t;
 
     out vec4 vertexPos;
     out vec2 vertOut;
     out vec2 uv;
 
     void main() {
-        gl_Position = translation*scale*vec4(vertexPosition, 0.0, 1.0);
+        vec2 pos = vertexPosition;
+        pos.y = pos.y*t + t - 1.0;
+        gl_Position = translation*scale*vec4(pos, 0.0, 1.0);
         vertexPos = gl_Position;
         vertOut = gl_Position.xy;
-        uv = (vertexPosition.xy + vec2(1, 1)) * 0.5;
+        uv = (pos.xy + vec2(1, 1)) * 0.5;
+        uv.y = -uv.y*t + t;
     }"#;
 
     pub const FRAGMENT_SHADER: &str = r#"#version 300 es
