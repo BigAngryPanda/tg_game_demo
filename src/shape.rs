@@ -28,9 +28,9 @@ impl Shape {
     }
 
     pub fn update_vertices(&mut self, vertices: &[f32]) {
-        for &i in &self.indices {
-            let i = i as usize;
-            self.vertices[i] = Point::new(vertices[2*i], vertices[2*i + 1]);
+        for i in 0..vertices.len()/2 {
+            let vert_idx = self.indices[i] as usize;
+            self.vertices[vert_idx] = Point::new(vertices[2*i], vertices[2*i + 1]);
         }
     }
 
