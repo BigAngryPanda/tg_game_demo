@@ -11,14 +11,6 @@ pub struct Shape {
 }
 
 impl Shape {
-    pub fn triangle(texture_id: usize) -> Shape {
-        Shape {
-            vertices: vec![Point::new(-1.0, -1.0), Point::new(0.0, 1.0), Point::new(1.0, -1.0)],
-            indices: vec![0, 1, 2],
-            texture_id
-        }
-    }
-
     pub fn square(texture_id: usize) -> Shape {
         Shape {
             vertices: vec![Point::new(-1.0, -1.0), Point::new(-1.0, 1.0), Point::new(1.0, 1.0), Point::new(1.0, -1.0)],
