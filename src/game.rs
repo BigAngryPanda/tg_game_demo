@@ -24,15 +24,23 @@ impl Game {
         let window: web_sys::Window = web_sys::window().expect("Failed to get window");
 
         let document = window.document().expect("Failed to get Document");
-        let canvas = document.get_element_by_id("canvas").expect("Failed to get canvas")
+        let canvas = document.get_element_by_id("canvas_gl").expect("Failed to get canvas")
             .dyn_into::<web_sys::HtmlCanvasElement>().expect("Failed to cast canvas");
 
         canvas.set_width(window.inner_width().unwrap().as_f64().unwrap() as u32);
         canvas.set_height(window.inner_height().unwrap().as_f64().unwrap() as u32);
 
-        let ui = Ui::new(&document);
-
         let mut scene = Scene::new(canvas);
+
+        let canvas_ui = document.get_element_by_id("canvas_ui").expect("Failed to get canvas")
+        .dyn_into::<web_sys::HtmlCanvasElement>().expect("Failed to cast canvas");
+
+        canvas_ui.set_width(window.inner_width().unwrap().as_f64().unwrap() as u32);
+        canvas_ui.set_height(window.inner_height().unwrap().as_f64().unwrap() as u32);
+
+        let mut ui = Ui::new(&canvas_ui);
+        ui.set_score(0);
+        ui.set_time(0.0);
 
         scene.add_dynamic_shape(&Shape::square(1));
         scene.add_dynamic_shape(&Shape::square(3));
@@ -65,6 +73,11 @@ impl Game {
         let dt = self.update_time();
         self.handle_input();
         self.scene.render(dt);
+        self.update_ui();
+
+        if self.scene.state() == State::Done && self.state.tick_timer(dt) {
+            self.update_scene();
+        }
     }
 
     pub fn window(&self) -> web_sys::Window {
@@ -78,18 +91,17 @@ impl Game {
     fn handle_input(&mut self) {
         if let Some(input) = self.input_queue.pop() {
             if self.scene.state() == State::Done && self.scene.is_dynamic_hit(0, input) {
-                self.update_state();
+                self.on_hit();
             }
         }
     }
 
-    fn update_state(&mut self) {
-        self.scene.permutate_transforms();
-        self.scene.reset();
+    fn on_hit(&mut self) {
+        self.update_scene();
 
         self.state.add_score();
 
-        self.ui.set_score(&self.state.score());
+        self.ui.set_score(self.state.score());
     }
 
     fn update_time(&mut self) -> f64 {
@@ -98,5 +110,22 @@ impl Game {
         self.timestamp = self.performance.now();
 
         dt
+    }
+
+    fn update_scene(&mut self) {
+        self.scene.permutate_transforms();
+        self.scene.reset();
+        self.state.start_timer();
+    }
+
+    fn update_ui(&mut self) {
+        match self.scene.state() {
+            State::Initial => {
+                self.ui.clear_timer();
+            },
+            State::Done => {
+                self.ui.set_time(self.state.time());
+            }
+        }
     }
 }

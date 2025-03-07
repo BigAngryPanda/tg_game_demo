@@ -38,7 +38,6 @@ pub struct Scene {
     static_shapes: Vec<Shape>,
     transforms: Vec<TransformInfo>,
     transform_indices: Vec<usize>,
-    random_generator: RandomGenerator,
     state: State,
     time: f64,
     textures: Vec<Texture>
@@ -116,7 +115,6 @@ impl Scene {
             static_shapes: Vec::new(),
             transforms,
             transform_indices,
-            random_generator: RandomGenerator::new(),
             state: State::Initial,
             time: 0.0,
             textures: vec![default_texture, fig_texture, back_texture, other_fig_texture]
@@ -125,7 +123,7 @@ impl Scene {
 
     pub fn permutate_transforms(&mut self) {
         for i in 0..self.dynamic_shapes.len() {
-            let j = self.random_generator.rand_in_range(i as u64, self.transform_indices.len() as u64) as usize;
+            let j = rand_in_range(i as u64, self.transform_indices.len() as u64) as usize;
 
             self.transform_indices.swap(i, j);
         }

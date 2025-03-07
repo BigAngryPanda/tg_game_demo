@@ -11,3 +11,8 @@ pub fn write<T: ToString>(data: &T) {
 pub fn write_debug<T: Debug>(data: &T) {
     write(&format!("{:?}", data));
 }
+
+#[allow(unused)]
+pub fn write_value<T: ToString + Clone>(value: T) {
+    write(&value);
+}
