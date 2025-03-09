@@ -88,7 +88,7 @@ impl Scene {
 
         feedback_render.enable_texture("tex");
 
-        feedback_render.write_uniform(&TransformInfo(0.1, 0.25).scale_matrix(), "scale");
+        feedback_render.write_uniform(&TransformInfo(0.25, 0.25).scale_matrix(), "scale");
 
         let transforms = get_transforms(0.8, -1.0, -1.0, 1.0, 1, 3);
 

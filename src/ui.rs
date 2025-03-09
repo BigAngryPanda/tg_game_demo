@@ -5,7 +5,6 @@ use crate::log;
 
 #[derive(Debug)]
 pub struct Ui {
-    //score_area: web_sys::HtmlParagraphElement,
     ctx: web_sys::CanvasRenderingContext2d,
     score_area: Label,
     time_area: Label,
@@ -27,9 +26,9 @@ impl Ui {
         let h = canvas.height();
 
         let score_label = Label {
-            x: (-0.95 + 1.0)*(w as f64 / 2.0), // map [-1; 1] to [0; w]
+            x: (-0.0 + 1.0)*(w as f64 / 2.0), // map [-1; 1] to [0; w]
             y: (0.95 - 1.0)*(h as f64 / -2.0),
-            w: 0.05*w as f64,
+            w: 0.2*w as f64,
             h: 0.01*h as f64
         };
 
@@ -79,6 +78,8 @@ impl Label {
     }
 
     fn clear(&mut self, ctx: &web_sys::CanvasRenderingContext2d) {
-        ctx.clear_rect(self.x - self.w / 2.0, self.y - self.h, self.w, self.h);
+        // hack
+        // to fix border cleanup we clear a little bit more than original rectangle
+        ctx.clear_rect(self.x - self.w / 2.0, self.y - self.h - 1.0, self.w, self.h + 2.0);
     }
 }
